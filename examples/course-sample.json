@@ -1,0 +1,45 @@
+{
+  "title": "Python 编程入门（示例课程）",
+  "description": "面向初学者的 Python 基础课程：变量与输出、循环、函数。共 3 个关卡。",
+  "lessons": [
+    {
+      "id": "l1",
+      "title": "第一关：打印问候",
+      "description": "编写程序，打印出：你好，世界",
+      "language": "python",
+      "preamble": "",
+      "starter": "print(\"你好，世界\")",
+      "checks": [
+        { "label": "输出包含「你好，世界」", "contains": "你好，世界" }
+      ],
+      "hint": "使用 print() 函数，注意中文标点与字符串引号。",
+      "reference": "print(\"你好，世界\")"
+    },
+    {
+      "id": "l2",
+      "title": "第二关：计算 1 到 10 的和",
+      "description": "编写程序，计算 1 加到 10 的结果并打印（应为 55）。",
+      "language": "python",
+      "preamble": "",
+      "starter": "total = 0\nfor i in range(1, 11):\n    total += i\nprint(total)",
+      "checks": [
+        { "label": "输出等于 55", "contains": "55" }
+      ],
+      "hint": "range(1, 11) 会生成 1..10；用累加变量求和。",
+      "reference": "total = 0\nfor i in range(1, 11):\n    total += i\nprint(total)"
+    },
+    {
+      "id": "l3",
+      "title": "第三关：定义一个求平方的函数",
+      "description": "定义函数 square(n) 返回 n 的平方，并调用 square(7) 打印结果（应为 49）。",
+      "language": "python",
+      "preamble": "",
+      "starter": "def square(n):\n    return n * n\n\nprint(square(7))",
+      "checks": [
+        { "label": "输出等于 49", "contains": "49" }
+      ],
+      "hint": "函数用 def 定义，return 返回结果；调用时传参。",
+      "reference": "def square(n):\n    return n * n\n\nprint(square(7))"
+    }
+  ]
+}
