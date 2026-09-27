@@ -17,6 +17,7 @@
     "src/",
     "tools/",
     "examples/",
+    "cordis.patch.yml",
     "README.md",
     "LICENSE"
   ],
@@ -26,6 +27,14 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Paimonshen/dsh-coding-plugin.git"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
   },
   "engines": {
     "node": ">=18"

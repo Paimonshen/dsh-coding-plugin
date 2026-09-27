@@ -1,6 +1,5 @@
 # dsh-coding-plugin · 代码学习插件
 
-[![npm](https://img.shields.io/npm/v/dsh-coding-plugin)](https://www.npmjs.com/package/dsh-coding-plugin)
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 一个面向编程学习者的 **DSH 动态 Cordis 插件**：右侧悬浮窗集成代码编辑器、多语言执行、课程关卡评判、进度追踪、笔记与片段库；代码分析**直投当前对话**，由对话主模型直接输出，全程中文界面、深浅色自适应。
@@ -25,8 +24,10 @@
 
 ## 安装
 
+仓库声明了 `dsh.bundle` 清单，可用 DSH 插件管理器直接安装：
+
 ```bash
-npm install dsh-coding-plugin
+dsh plugin add Paimonshen/dsh-coding-plugin
 ```
 
 或在 DSH 对话中直接让我「安装 dsh-coding-plugin 并启用」。
