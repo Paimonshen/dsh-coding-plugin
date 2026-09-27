@@ -1,5 +1,7 @@
 # dsh-coding-plugin · 代码学习插件
 
+[![npm](https://img.shields.io/npm/v/dsh-coding-plugin)](https://www.npmjs.com/package/dsh-coding-plugin)
+[![npm downloads](https://img.shields.io/npm/dm/dsh-coding-plugin)](https://www.npmjs.com/package/dsh-coding-plugin)
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 一个面向编程学习者的 **DSH 动态 Cordis 插件**：右侧悬浮窗集成代码编辑器、多语言执行、课程关卡评判、进度追踪、笔记与片段库；代码分析**直投当前对话**，由对话主模型直接输出，全程中文界面、深浅色自适应。
@@ -24,13 +26,22 @@
 
 ## 安装
 
-仓库声明了 `dsh.bundle` 清单，可用 DSH 插件管理器直接安装：
+已发布到 npm，可直接安装：
 
 ```bash
-dsh plugin add Paimonshen/dsh-coding-plugin
+npm install dsh-coding-plugin
 ```
 
-或在 DSH 对话中直接让我「安装 dsh-coding-plugin 并启用」。
+或由 DSH 插件管理器从仓库安装（仓库与包均声明了 `dsh.bundle` 清单）：
+
+```bash
+dsh plugin add dsh-coding-plugin          # 走 npm 预构建包
+dsh plugin add Paimonshen/dsh-coding-plugin   # 走 GitHub 源码
+```
+
+也可以直接在 DSH 对话中让我「安装 dsh-coding-plugin 并启用」。
+
+> 走 npm 安装可跳过源码构建的 `allowBuilds` 构建授权步骤。
 
 ## 使用方法（DSH 内）
 
@@ -49,13 +60,24 @@ dsh-coding-plugin/
 │   └── app.js       # 应用层：7 个页签工厂 + TABS 注册表 + 悬浮窗外壳
 ├── source/          # 构建产物（发布用）：client.js / host.js
 ├── tools/
-│   ├── build.js     # 构建：合并折叠 + JSON 安全校验 + 双半边语法校验
-│   └── make_syntax_check.js
-└── examples/
-    └── course-sample.json
+│   └── build.js     # 构建：合并折叠 + JSON 安全校验 + 双半边语法校验
+├── examples/
+│   └── course-sample.json
+├── cordis.patch.yml # DSH bundle 清单引用的插件挂载补丁
+└── package.json     # 含 dsh.bundle / dsh.client 清单（可被 dsh plugin add 安装）
 ```
 
 ## 在 DSH 中加载
+
+**方式一：插件管理器安装**（推荐）
+
+```bash
+dsh plugin add dsh-coding-plugin
+```
+
+装上后输入 `/coding` 即可使用。
+
+**方式二：手动加载（开发 / 调试用）**
 
 插件为双半边纯 JS（无构建器转换）：
 
@@ -64,7 +86,7 @@ dsh-coding-plugin/
 3. `cordis_run` 激活（首次 `run`）；
 4. 输入 `/coding` 开始使用。
 
-> 注意：动态插件**不跨 DSH 进程重启**——重启后需重新 `cordis_define` + `cordis_run`（仓库源码随时可重建）。
+> 注意：手动加载的动态插件**不跨 DSH 进程重启**——重启后需重新 `cordis_define` + `cordis_run`（仓库源码随时可重建）；用 `dsh plugin add` 安装则不受此限。
 
 ## 源码约定（改代码必读）
 

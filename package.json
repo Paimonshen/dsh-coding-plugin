@@ -1,16 +1,19 @@
 {
   "name": "dsh-coding-plugin",
   "version": "1.0.0",
-  "description": "代码学习插件 — DSH 动态 Cordis 插件：悬浮窗代码编辑器 / 多语言执行 / 课程关卡评判 / 进度笔记片段 / 分析直投对话",
+  "description": "代码学习插件 — DSH 悬浮窗代码编辑器 / 多语言执行 / 课程关卡评判 / 进度笔记片段 / 分析直投对话",
   "keywords": [
     "dsh",
+    "dsh-plugin",
     "cordis",
     "plugin",
     "coding",
     "learning",
+    "code-runner",
     "deepseek"
   ],
   "license": "MIT",
+  "author": "Paimonshen",
   "main": "source/client.js",
   "files": [
     "source/",
@@ -27,6 +30,10 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Paimonshen/dsh-coding-plugin.git"
+  },
+  "homepage": "https://github.com/Paimonshen/dsh-coding-plugin#readme",
+  "bugs": {
+    "url": "https://github.com/Paimonshen/dsh-coding-plugin/issues"
   },
   "dsh": {
     "bundle": {
