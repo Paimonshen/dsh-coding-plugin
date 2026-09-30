@@ -274,23 +274,21 @@
     return function (props) {
       const sid = props.sessionId;
       const [code, setCode] = React.useState('');
-      const [question, setQuestion] = React.useState('');
       const [lang, setLang] = React.useState('python');
       const [reply, setReply] = React.useState(null);
       const [busy, setBusy] = React.useState(false);
       return h('div', { className: 'cd-body' },
-        P.hint('将代码+问题发进当前对话，由对话主模型直接输出分析结果（不在此展示）。'),
-        P.area({ placeholder: '待分析的代码…', value: code, onChange: function (e) { setCode(e.target.value); } }),
-        P.field({ placeholder: '想问什么？（可选）', value: question, onChange: function (e) { setQuestion(e.target.value); } }),
+        P.hint('把代码原文发进当前对话，由对话主模型直接分析作答——只发代码，不带任何附加文案。'),
+        P.area({ placeholder: '待分析的代码原文…', value: code, onChange: function (e) { setCode(e.target.value); } }),
         P.row(P.seg(LANGS, lang, setLang),
           P.btn(busy ? '发送中…' : '📨 发到对话分析', function () {
             setBusy(true); setReply(null);
-            K.call('agentAnalyze', { code: code, language: lang, question: question || undefined }, sid).then(function (r) {
+            K.call('agentAnalyze', { code: code }, sid).then(function (r) {
               setReply(r); setBusy(false);
             }).catch(function (e) { setReply({ fallback: true, message: String(e) }); setBusy(false); });
           }, { disabled: busy })),
         busy ? h(F.RunningBar, { ms: 0 }) : null,
-        reply ? P.card(reply.ok === false ? P.msg('err', reply.message || '发送失败') : P.msg('ok', '✅ 已发送到对话：代码与分析请求已进入当前会话，请切到聊天查看回复。')) : null
+        reply ? P.card(reply.ok === false ? P.msg('err', reply.message || '发送失败') : P.msg('ok', '✅ 已把代码原文发进对话，请切到聊天查看分析。')) : null
       );
     };
   }
@@ -369,7 +367,7 @@
     const style = rect ? { left: rect.left + 'px', top: rect.top + 'px', width: rect.width + 'px', height: rect.height + 'px' } : null;
     return h('div', { className: 'cd-panel ' + lock, style: style },
       h('div', { className: 'cd-head', onPointerDown: onDragStart },
-        h('span', { className: 'cd-title' }, '🧩 代码学习 v33'),
+        h('span', { className: 'cd-title' }, '🧩 代码学习 v34'),
         h('div', { className: 'cd-actions' },
           P.ghost('本会话关闭', function (e) { const btn = e && e.currentTarget; P.closePanel(btn, function () { K.call('coding_close', {}, sid); F.setUiOpen(sid, false); }); }),
           h('button', { className: 'cd-close', title: '收起', onClick: function (e) { const btn = e && e.currentTarget; P.closePanel(btn, function () { F.setUiOpen(sid, false); }); } }, '✕'))),
