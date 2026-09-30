@@ -1,6 +1,6 @@
 {
   "name": "dsh-coding-plugin",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "代码学习插件 — DSH 悬浮窗代码编辑器 / 多语言执行 / 课程关卡评判 / 进度笔记片段 / 分析直投对话",
   "keywords": [
     "dsh",
