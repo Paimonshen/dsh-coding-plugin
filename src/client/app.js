@@ -52,7 +52,7 @@
           P.btn(run.busy ? '运行中…' : '▶ 运行', run.go, { disabled: run.busy }),
           P.ghost('🤖 分析', function () { run.go({ analyze: true }); }, { disabled: run.busy })
         ),
-        P.area({ value: code, onChange: function (e) { setCode(e.target.value); } }),
+        P.editor({ value: code, language: lang, onChange: function (e) { setCode(e.target.value); } }),
         P.field({ placeholder: '可选：运行时标准输入 (stdin)', value: input, onChange: function (e) { setInput(e.target.value); } }),
         run.busy ? h(F.RunningBar, { ms: run.elapsed }) : null,
         run.live ? P.pre(run.live + ' ▋') : null,
@@ -62,7 +62,7 @@
         ) : null,
         run.out && run.out.ok !== false ? P.resultCard(
           h('span', { className: 'st-ok' }, '✓ 退出码 ' + String(run.out.exitCode) + (run.out.timedOut ? '（超时）' : '') + ' · ' + (run.out.ms || 0) + ' ms'),
-          h('div', null, h(F.StreamPre, { text: (run.out.stdout || '') + (run.out.stderr ? ((run.out.stdout ? NL + NL : '') + '--- stderr ---' + NL + run.out.stderr) : '') }))
+          h('div', null, P.code((run.out.stdout || '') + (run.out.stderr ? ((run.out.stdout ? NL + NL : '') + '--- stderr ---' + NL + run.out.stderr) : ''), lang))
         ) : null,
         run.out && run.out.sentToConversation ? P.resultCard(
           h('span', { className: 'st-ok' }, '📨 已发送到对话'),
@@ -144,7 +144,7 @@
               return { value: l.id, label: l.title + (progress[l.id] && progress[l.id].status === 'completed' ? ' ✅' : '') };
             })),
           lesson ? P.hint(lesson.description || '') : null,
-          P.area({ value: code, placeholder: '在此编写并提交本关卡的解答代码…', onChange: function (e) { setCode(e.target.value); } }),
+          P.editor({ value: code, language: (lesson && lesson.language) || 'python', placeholder: '在此编写并提交本关卡的解答代码…', onChange: function (e) { setCode(e.target.value); } }),
           P.btn(busy ? '评判中…' : '提交并评判', submit, { disabled: busy }),
           busy ? h(F.RunningBar, { ms: elapsed }) : null,
           result && result.ok === false ? P.resultCard(
@@ -157,7 +157,7 @@
               result.checks && result.checks.length ? h('ul', { style: { margin: '8px 14px', padding: 0, listStyle: 'none' } }, result.checks.map(function (c, i) {
                 return h('li', { key: i, style: { padding: '3px 0', color: c.ok ? 'var(--cd-ok)' : 'var(--cd-err)' } }, (c.ok ? '✓' : '✗') + ' ' + c.label);
               })) : null,
-              h(F.StreamPre, { text: (result.stdout || '') + (result.stderr ? ((result.stdout ? NL + NL : '') + '--- stderr ---' + NL + result.stderr) : '') }),
+              P.code((result.stdout || '') + (result.stderr ? ((result.stdout ? NL + NL : '') + '--- stderr ---' + NL + result.stderr) : ''), (lesson && lesson.language) || 'python'),
               result.hint ? h('div', { className: 'cd-hint', style: { padding: '8px 14px' } }, '提示：' + result.hint) : null,
               result.reference ? h('div', { style: { padding: '8px 14px' } }, P.detail('参考答案', P.pre(result.reference))) : null
             )
@@ -247,7 +247,7 @@
       return h('div', { className: 'cd-body' },
         P.field({ placeholder: '片段标题', value: title, onChange: function (e) { setTitle(e.target.value); } }),
         P.seg(LANGS, lang, setLang),
-        P.area({ placeholder: '代码片段…', value: code, onChange: function (e) { setCode(e.target.value); } }),
+        P.editor({ placeholder: '代码片段…', value: code, language: lang, onChange: function (e) { setCode(e.target.value); } }),
         P.btn('保存片段', function () {
           if (!title || !code) { setMsg({ kind: 'err', text: '请填写标题与代码。' }); return; }
           K.call('saveSnippet', { title: title, code: code, language: lang }, sid).then(function (r) {
@@ -258,7 +258,7 @@
         snips.length ? h('div', null, snips.slice().reverse().map(function (s) {
           return P.card(
             P.row(h('strong', null, s.title), P.hint(s.language)),
-            P.pre(s.code),
+            P.code(s.code, s.language),
             P.ghost('插入 / 复制', function () {
               try { navigator.clipboard.writeText(s.code); setMsg({ kind: 'info', text: '已复制到剪贴板。' }); }
               catch (e) { setMsg({ kind: 'info', text: s.code }); }
@@ -279,7 +279,7 @@
       const [busy, setBusy] = React.useState(false);
       return h('div', { className: 'cd-body' },
         P.hint('把代码原文发进当前对话，由对话主模型直接分析作答——只发代码，不带任何附加文案。'),
-        P.area({ placeholder: '待分析的代码原文…', value: code, onChange: function (e) { setCode(e.target.value); } }),
+        P.editor({ placeholder: '待分析的代码原文…', value: code, language: lang, onChange: function (e) { setCode(e.target.value); } }),
         P.row(P.seg(LANGS, lang, setLang),
           P.btn(busy ? '发送中…' : '📨 发到对话分析', function () {
             setBusy(true); setReply(null);
@@ -367,7 +367,7 @@
     const style = rect ? { left: rect.left + 'px', top: rect.top + 'px', width: rect.width + 'px', height: rect.height + 'px' } : null;
     return h('div', { className: 'cd-panel ' + lock, style: style },
       h('div', { className: 'cd-head', onPointerDown: onDragStart },
-        h('span', { className: 'cd-title' }, '🧩 代码学习 v34'),
+        h('span', { className: 'cd-title' }, '🧩 代码学习 v35'),
         h('div', { className: 'cd-actions' },
           P.ghost('本会话关闭', function (e) { const btn = e && e.currentTarget; P.closePanel(btn, function () { K.call('coding_close', {}, sid); F.setUiOpen(sid, false); }); }),
           h('button', { className: 'cd-close', title: '收起', onClick: function (e) { const btn = e && e.currentTarget; P.closePanel(btn, function () { F.setUiOpen(sid, false); }); } }, '✕'))),

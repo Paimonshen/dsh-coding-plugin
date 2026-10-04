@@ -28,7 +28,14 @@ return {
       ease: 'ease', easeOut: 'cubic-bezier(.2,.8,.25,1)', easeSpring: 'cubic-bezier(.34,1.56,.64,1)',
       zPanel: 2147482998, zFab: 2147483000,
       headH: '46px', padBody: '12px', gapBody: '10px',
-      mono: 'ui-monospace,SFMono-Regular,Menlo,Consolas,monospace'
+      mono: 'ui-monospace,SFMono-Regular,Menlo,Consolas,monospace',
+      /* 语法高亮配色（深浅色由主题 token 自适应） */
+      hlKey: 'var(--dsw-alias-brand-primary, #7aa2f7)',
+      hlStr: 'var(--dsw-alias-state-success-primary, #3fb27f)',
+      hlNum: 'var(--dsw-alias-state-warn-primary, #f5a524)',
+      hlCmt: 'var(--dsw-alias-label-secondary, #8a91a8)',
+      hlFn: 'var(--dsw-alias-label-primary, #c0caf5)',
+      hlOp: 'var(--dsw-alias-label-secondary, #9aa5ce)',
     };
     const tr = function (extra) {
       const base = 'background-color ' + T.dur + ' ' + T.ease + ',color ' + T.dur + ' ' + T.ease +
@@ -79,6 +86,26 @@ return {
       '.cd-select option{background:var(--cd-bg1);color:var(--cd-text);}',
       '.cd-select option:checked,.cd-select option:hover{background:color-mix(in srgb,var(--cd-brand) 24%,var(--cd-bg1));color:var(--cd-text);font-weight:600;}',
       '.cd-textarea{flex:1;min-height:150px;resize:vertical;font-family:' + T.mono + ';font-size:12.5px;line-height:1.6;}',
+      /* 叠层高亮编辑器：底 pre 着色 + 上 textarea 透明文字，几何完全对齐 */
+      '.cd-edit{position:relative;flex:1;min-height:150px;display:flex;overflow:hidden;background:var(--cd-bg2);border:1px solid var(--cd-b1);border-radius:var(--cd-rs);transition:' + tr() + ';}',
+      '.cd-edit:focus-within{border-color:#999;box-shadow:0 0 0 2px rgba(0,0,0,.18);}',
+      '.cd-edit .cd-hl,.cd-edit .cd-ta{margin:0;padding:7px 10px;font-family:' + T.mono + ';font-size:12.5px;line-height:1.6;',
+      'white-space:pre;word-break:normal;overflow:auto;box-sizing:border-box;width:100%;height:100%;border:0;}',
+      '.cd-edit .cd-hl{position:absolute;inset:0;pointer-events:none;background:transparent;color:var(--cd-text);}',
+      '.cd-edit .cd-ta{position:relative;background:transparent;color:transparent;caret-color:var(--cd-text);resize:none;outline:none;}',
+      '.cd-edit .cd-ta::selection{background:color-mix(in srgb,var(--cd-brand) 35%,transparent);}',
+      '.cd-hl .hl-key{color:' + T.hlKey + ';font-weight:600;}',
+      '.cd-hl .hl-str{color:' + T.hlStr + ';}',
+      '.cd-hl .hl-num{color:' + T.hlNum + ';}',
+      '.cd-hl .hl-cmt{color:' + T.hlCmt + ';font-style:italic;}',
+      '.cd-hl .hl-fn{color:' + T.hlFn + ';font-weight:600;}',
+      '.cd-hl .hl-op{color:' + T.hlOp + ';}',
+      '.cd-pre .hl-key{color:' + T.hlKey + ';font-weight:600;}',
+      '.cd-pre .hl-str{color:' + T.hlStr + ';}',
+      '.cd-pre .hl-num{color:' + T.hlNum + ';}',
+      '.cd-pre .hl-cmt{color:' + T.hlCmt + ';font-style:italic;}',
+      '.cd-pre .hl-fn{color:' + T.hlFn + ';font-weight:600;}',
+      '.cd-pre .hl-op{color:' + T.hlOp + ';}',
       '.cd-pre{margin:0;padding:10px 12px;background:var(--cd-bg2);border:1px solid var(--cd-b1);border-radius:var(--cd-rs);',
       'white-space:pre-wrap;word-break:break-word;max-height:280px;overflow:auto;font-family:' + T.mono + ';font-size:12px;line-height:1.6;transition:' + tr() + ';}',
       '.cd-card{background:var(--cd-bg1);border:1px solid var(--cd-b1);border-radius:' + T.rTab + ';padding:12px;',
@@ -205,6 +232,102 @@ return {
     };
 
     /* ===== 4. 原语 P：页签只声明结构，不碰 className ===== */
+    const NL = String.fromCharCode(10);
+    const NLc = { v: NL };
+    /* 字符常量表：以字符码构造，规避双引号/反斜杠/行注释等 JSON 不安全字面量 */
+    const CC = {
+      dq: String.fromCharCode(34), sq: String.fromCharCode(39), bs: String.fromCharCode(92),
+      bt: String.fromCharCode(96), lt: String.fromCharCode(60),
+      sl2: String.fromCharCode(47, 47), slst: String.fromCharCode(47, 42), stsl: String.fromCharCode(42, 47),
+      hc: String.fromCharCode(60, 60, 35), he: String.fromCharCode(35, 62)
+    };
+    /* 语法高亮内核：单遍词法扫描（关键字/字符串/注释/数字/函数名/变量） */
+    const KW = {
+      python: `and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield True False None self`,
+      javascript: `async await break case catch class const continue debugger default delete do else export extends false finally for from function if import in instanceof let new null of return static super switch this throw true try typeof undefined var void while with yield`,
+      typescript: `abstract any as async await boolean break case catch class const continue declare default delete do else enum export extends false finally for from function if implements import in instanceof interface let namespace never new null number object of private protected public readonly return static string super switch this throw true try type undefined union unknown var void while with yield`,
+      powershell: `begin break catch class continue data do dynamicparam else elseif end enum exit filter finally for foreach from function if in param process return switch throw trap try until using var while echo write-output write-host get-childitem set-item foreach-object where-object select-object test-path new-item remove-item null true false`
+    };
+    const KW_TABLE = {};
+    Object.keys(KW).forEach(function (k) { const m = {}; KW[k].split(` `).forEach(function (w) { m[w] = true; }); KW_TABLE[k] = m; });
+    function hlSplit(code, lang) {
+      const s = String(code === undefined || code === null ? `` : code);
+      const kws = KW_TABLE[lang] || KW_TABLE.python;
+      const isJs = lang === `javascript` || lang === `typescript`;
+      const isPs = lang === `powershell`;
+      const isPy = !isJs && !isPs;
+      const out = [];
+      let buf = ``;
+      const flush = function (cls) { if (buf) { out.push([cls, buf]); buf = ``; } };
+      const idStart = function (c) { return (c >= `a` && c <= `z`) || (c >= `A` && c <= `Z`) || c === `_` || c === `$`; };
+      const idPart = function (c) { return idStart(c) || (c >= `0` && c <= `9`); };
+      const isDigit = function (c) { return c >= `0` && c <= `9`; };
+      let i = 0;
+      while (i < s.length) {
+        const c = s[i];
+        const c2 = s.substr(i, 2);
+        if ((isPy || isPs) && c === `#`) { let j = i; while (j < s.length && s[j] !== NLc.v) j++; flush(``); out.push([`hl-cmt`, s.slice(i, j)]); i = j; continue; }
+        if (isJs && c2 === CC.sl2) { let j = i; while (j < s.length && s[j] !== NLc.v) j++; flush(``); out.push([`hl-cmt`, s.slice(i, j)]); i = j; continue; }
+        if (isJs && c2 === CC.slst) { let j = s.indexOf(CC.stsl, i + 2); j = j < 0 ? s.length : j + 2; flush(``); out.push([`hl-cmt`, s.slice(i, j)]); i = j; continue; }
+        if (isPs && c2 === CC.hc) { let j = s.indexOf(CC.he, i + 2); j = j < 0 ? s.length : j + 2; flush(``); out.push([`hl-cmt`, s.slice(i, j)]); i = j; continue; }
+        if (c === CC.dq || c === CC.sq) {
+          const three = s.substr(i, 3) === c + c + c;
+          const q = three ? c + c + c : c;
+          let j = i + q.length;
+          while (j < s.length) { if (s.substr(j, q.length) === q) { j += q.length; break; } if (s[j] === CC.bs) j += 2; else j++; }
+          flush(``); out.push([`hl-str`, s.slice(i, j)]); i = j; continue;
+        }
+        if (isJs && c === CC.bt) { let j = i + 1; while (j < s.length) { if (s[j] === CC.bs) j += 2; else if (s[j] === CC.bt) { j++; break; } else j++; } flush(``); out.push([`hl-str`, s.slice(i, j)]); i = j; continue; }
+        if (isDigit(c)) { let j = i; while (j < s.length && (isDigit(s[j]) || s[j] === `.` || s[j] === `_`)) j++; flush(``); out.push([`hl-num`, s.slice(i, j)]); i = j; continue; }
+        if (isPs && idStart(c)) {
+          let j = i; while (j < s.length && (idPart(s[j]) || (s[j] === `-` && idStart(s[j + 1] || ``)))) j++;
+          const w2 = s.slice(i, j);
+          const wl = w2.toLowerCase();
+          let k2 = j; while (k2 < s.length && (s[k2] === ` ` || s[k2] === NLc.v)) k2++;
+          flush(``);
+          if (kws[wl]) out.push([`hl-key`, w2]);
+          else if (s[k2] === `(`) out.push([`hl-fn`, w2]);
+          else out.push([`hl-fn`, w2]);
+          i = j; continue;
+        }
+        if (idStart(c)) {
+          let j = i; while (j < s.length && idPart(s[j])) j++;
+          const word = s.slice(i, j);
+          let k = j; while (k < s.length && (s[k] === ` ` || s[k] === NLc.v)) k++;
+          const isCall = s[k] === `(`;
+          const isVar = isPs && word[0] === `$`;
+          flush(``);
+          if (isVar) out.push([`hl-num`, word]);
+          else if (kws[word]) out.push([`hl-key`, word]);
+          else if (isCall) out.push([`hl-fn`, word]);
+          else buf += word;
+          i = j; continue;
+        }
+        buf += c; i++;
+      }
+      flush(``);
+      return out;
+    }
+    function hlRender(code, lang) {
+      return hlSplit(code, lang).map(function (seg, idx) {
+        return seg[0] ? h(`span`, { key: idx, className: seg[0] }, seg[1]) : seg[1];
+      });
+    }
+    /* 叠层高亮编辑器：底层 pre 着色 + 上层 textarea 透明文字，滚动同步 */
+    function CodeEditor(props) {
+      const taRef = React.useRef(null);
+      const hlRef = React.useRef(null);
+      const sync = function () {
+        try { const ta = taRef.current, hl = hlRef.current; if (ta && hl) { hl.scrollTop = ta.scrollTop; hl.scrollLeft = ta.scrollLeft; } } catch (e) {}
+      };
+      const onChange = function (e) { if (props.onChange) props.onChange(e); sync(); };
+      return h(`div`, { className: `cd-edit` },
+        h(`pre`, { className: `cd-hl`, ref: hlRef }, hlRender(props.value, props.language), NLc.v),
+        h(`textarea`, { className: `cd-ta`, ref: taRef, value: props.value, spellCheck: false, placeholder: props.placeholder, onChange: onChange, onScroll: sync }));
+    }
+    function CodePre(props) {
+      return h(`pre`, { className: `cd-pre` }, hlRender(props.text, props.language));
+    }
     const P = {
       row: function () { return h('div', { className: 'cd-row' }, Array.prototype.slice.call(arguments)); },
       btn: function (label, onClick, opts) {
@@ -245,8 +368,6 @@ return {
     };
 
     /* ===== 5. 通用部件：流式文本 / 运行条 ===== */
-    const NL = String.fromCharCode(10);
-    const NLc = { v: NL };
     function StreamText(props) {
       const full = props.text || '';
       const [n, setN] = React.useState(props.instant ? full.length : 0);
