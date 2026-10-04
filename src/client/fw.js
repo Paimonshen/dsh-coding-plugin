@@ -406,9 +406,21 @@ return {
         ref.current = timer.interval(function () { setElapsed(Date.now() - t0); }, 60);
       };
       const end = function () { setBusy(false); K.stopT(ref.current); ref.current = null; };
+      /* over 只接受纯数据对象：若被当作事件处理器直接调用，React 会传入事件对象，
+         其中含 DOM 引用会使 RPC 的 args 不再是纯 JSON（被 dynamicCordisRunner 拒绝），故在此过滤。 */
+      const cleanOver = function (o) {
+        if (!o || typeof o !== 'object') return null;
+        if (typeof o.preventDefault === 'function') return null;
+        if (typeof o.target !== 'undefined') return null;
+        if (typeof o.nativeEvent !== 'undefined') return null;
+        const out = {};
+        Object.keys(o).forEach(function (k) { const v = o[k]; if (v === null || typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') out[k] = v; });
+        return out;
+      };
       const go = function (over) {
+        const ov = cleanOver(over);
         begin();
-        K.start(makeArgs(over), sid, function (partial) { setLive(partial); }, function (finalR) { setOut(finalR); end(); });
+        K.start(makeArgs(ov), sid, function (partial) { setLive(partial); }, function (finalR) { setOut(finalR); end(); });
       };
       const stop = function () { end(); };
       return { busy: busy, elapsed: elapsed, live: live, out: out, go: go, stop: stop, setOut: setOut };

@@ -49,8 +49,8 @@
       return h('div', { className: 'cd-body' },
         P.row(
           P.seg(LANGS, lang, function (id) { setLang(id); setCode(SAMPLES[id]); }),
-          P.btn(run.busy ? '运行中…' : '▶ 运行', run.go, { disabled: run.busy }),
-          P.ghost('🤖 分析', function () { run.go({ analyze: true }); }, { disabled: run.busy })
+          P.btn(run.busy ? '运行中…' : '▶ 运行', function () { run.go(); }, { disabled: run.busy }),
+          P.ghost('📨 分析(发到对话)', function () { run.go({ analyze: true }); }, { disabled: run.busy })
         ),
         P.editor({ value: code, language: lang, onChange: function (e) { setCode(e.target.value); } }),
         P.field({ placeholder: '可选：运行时标准输入 (stdin)', value: input, onChange: function (e) { setInput(e.target.value); } }),
@@ -145,7 +145,7 @@
             })),
           lesson ? P.hint(lesson.description || '') : null,
           P.editor({ value: code, language: (lesson && lesson.language) || 'python', placeholder: '在此编写并提交本关卡的解答代码…', onChange: function (e) { setCode(e.target.value); } }),
-          P.btn(busy ? '评判中…' : '提交并评判', submit, { disabled: busy }),
+          P.btn(busy ? '评判中…' : '提交并评判', function () { submit(); }, { disabled: busy }),
           busy ? h(F.RunningBar, { ms: elapsed }) : null,
           result && result.ok === false ? P.resultCard(
             h('span', { className: 'st-err' }, '❌ ' + (result.error || '提交失败')),
@@ -367,7 +367,7 @@
     const style = rect ? { left: rect.left + 'px', top: rect.top + 'px', width: rect.width + 'px', height: rect.height + 'px' } : null;
     return h('div', { className: 'cd-panel ' + lock, style: style },
       h('div', { className: 'cd-head', onPointerDown: onDragStart },
-        h('span', { className: 'cd-title' }, '🧩 代码学习 v35'),
+        h('span', { className: 'cd-title' }, '🧩 代码学习 v36'),
         h('div', { className: 'cd-actions' },
           P.ghost('本会话关闭', function (e) { const btn = e && e.currentTarget; P.closePanel(btn, function () { K.call('coding_close', {}, sid); F.setUiOpen(sid, false); }); }),
           h('button', { className: 'cd-close', title: '收起', onClick: function (e) { const btn = e && e.currentTarget; P.closePanel(btn, function () { F.setUiOpen(sid, false); }); } }, '✕'))),
